@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NER DisasterGuard & SafeGuard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #ef4444;
+            --primary-light: #f87171;
+            --primary-dark: #b91c1c;
+            --secondary: #10b981;
+            --secondary-light: #34d399;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+            --cyan: #06b6d4;
+            --gray-50: #0f172a;
+            --gray-100: #1e293b;
+            --gray-200: #334155;
+            --gray-300: #475569;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #cbd5e1;
+            --gray-800: #f1f5f9;
+            --gray-900: #ffffff;
+            --glass: rgba(30, 41, 59, .85);
+            --glass-light: rgba(30, 41, 59, .7);
+            --glass-border: rgba(255, 255, 255, .12);
+            --gradient-bg: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            --neon-glow: 0 0 20px rgba(239, 68, 68, .5);
+        }
+        .light-theme {
+            --primary: #dc2626;
+            --primary-light: #ef4444;
+            --primary-dark: #b91c1c;
+            --secondary: #059669;
+            --secondary-light: #10b981;
+            --info: #2563eb;
+            --warning: #d97706;
+            --purple: #7c3aed;
+            --pink: #db2777;
+            --cyan: #0891b2;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --glass: rgba(255, 255, 255, .9);
+            --glass-light: rgba(255, 255, 255, .8);
+            --glass-border: rgba(0, 0, 0, .12);
+            --gradient-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
+            --neon-glow: 0 0 20px rgba(59, 130, 246, .3);
+        }
+        html, body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--gradient-bg);
+            color: var(--gray-900);
+            height: 100%;
+            overflow-x: hidden;
+            transition: all .5s ease;
+        }
+        .page { display: none; min-height: 100vh; animation: pageEnter .6s ease; }
+        .page.active { display: flex; flex-direction: column; }
+        @keyframes pageEnter {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .container { max-width: 600px; margin: 0 auto; width: 100%; padding: 1.5rem; padding-bottom: 140px; }
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .header-right { display: flex; gap: .75rem; align-items: center; }
+        .header h1 { font-size: 1.3rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .icon-btn {
+            padding: .6rem; background: transparent; color: var(--gray-900);
+            font-size: 1.4rem; border: none; cursor: pointer; border-radius: 50%;
+            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+            transition: all .3s ease;
+        }
+        .icon-btn:hover { background: rgba(255, 255, 255, .1); transform: scale(1.1); }
+        .back-btn { padding: .5rem; background: transparent; color: var(--gray-900); border: none; cursor: pointer; font-size: 1.2rem; }
+        .logo-icon {
+            width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary), var(--pink));
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.4rem; box-shadow: 0 0 30px rgba(239, 68, 68, .7);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .sos-btn-container { display: flex; flex-direction: column; align-items: center; margin: 2rem auto; }
+        .sos-btn {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff2e2e, #ff1a4b, #ff416c);
+            color: white; font-size: 2.5rem; font-weight: 900;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 0 0 rgba(255, 30, 30, .7), 0 30px 60px rgba(239, 68, 68, .6);
+            animation: pulse-red 2s infinite; border: none; cursor: pointer; text-shadow: 0 3px 10px rgba(0,0,0,.5);
+            position: relative; transition: transform .3s;
+        }
+        .sos-btn:hover { transform: scale(1.1); animation-play-state: paused; }
+        @keyframes pulse-red {
+            0% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(255, 30, 30, .9), 0 30px 60px rgba(239, 68, 68, .6); }
+            70% { transform: scale(1); box-shadow: 0 0 0 35px rgba(255, 30, 30, 0), 0 30px 60px rgba(239, 68, 68, .6); }
+            100% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(255, 30, 30, 0), 0 30px 60px rgba(239, 68, 68, .6); }
+        }
+        .card {
+            background: var(--glass); backdrop-filter: blur(20px);
+            border-radius: 1.5rem; padding: 1.75rem;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, .4), 0 0 0 1px rgba(255, 255, 255, .1);
+            margin-bottom: 1.5rem; border: 1px solid var(--glass-border);
+            transition: all .4s ease; position: relative; overflow: hidden;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 25px 70px rgba(0, 0, 0, .6), 0 0 0 1px rgba(255, 255, 255, .15); }
+        .card-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 1.1rem; }
+        .risk-badge {
+            display: inline-block; padding: .25rem .75rem; border-radius: 2rem;
+            font-size: .75rem; font-weight: 700; text-transform: uppercase;
+        }
+        .risk-low { background: rgba(16, 185, 129, .15); color: var(--secondary); }
+        .risk-medium { background: rgba(245, 158, 11, .15); color: var(--warning); }
+        .risk-high { background: rgba(239, 68, 68, .15); color: var(--primary); }
+        .risk-critical { background: rgba(239, 68, 68, .3); color: #fff; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+        .stat-box {
+            background: rgba(255, 255, 255, .04); border-radius: 1rem; padding: 1rem;
+            text-align: center; border: 1px solid rgba(255, 255, 255, .05);
+        }
+        .light-theme .stat-box { background: rgba(0, 0, 0, .02); border-color: rgba(0, 0, 0, .06); }
+        .stat-icon { font-size: 1.8rem; margin-bottom: .5rem; }
+        .stat-value { font-size: 1.5rem; font-weight: 900; line-height: 1.2; }
+        .stat-label { font-size: .75rem; color: var(--gray-400); margin-top: .25rem; }
+        .btn {
+            padding: .75rem 1.5rem; border-radius: .875rem; font-weight: 600;
+            cursor: pointer; transition: all .3s; border: none;
+            display: inline-flex; align-items: center; justify-content: center; gap: .625rem;
+            font-size: .9rem; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+        }
+        .btn:active { transform: scale(.95); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+        .btn-secondary { background: rgba(255,255,255,.05); color: var(--gray-900); border: 1px solid var(--glass-border); }
+        .light-theme .btn-secondary { background: rgba(0,0,0,.02); color: var(--gray-800); }
+        .map-container {
+            background: rgba(15, 23, 42, .6); border-radius: 1rem; overflow: hidden;
+            border: 1px solid var(--glass-border); height: 250px; position: relative;
+        }
+        #google-map, #google-weather-map { width: 100%; height: 100%; border-radius: 1rem; }
+        .list-item {
+            display: flex; gap: 1rem; align-items: center; padding: 1rem;
+            background: rgba(255,255,255,.04); border-radius: 1rem;
+            border: 1px solid rgba(255,255,255,.06); margin-bottom: .75rem;
+            transition: transform .3s;
+        }
+        .light-theme .list-item { background: rgba(0,0,0,.02); border-color: rgba(0,0,0,.06); }
+        .item-icon {
+            width: 48px; height: 48px; border-radius: 14px; display: flex;
+            align-items: center; justify-content: center; font-size: 1.4rem;
+            flex-shrink: 0; background: rgba(255,255,255,.08);
+        }
+        .nav {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 2rem); max-width: 600px;
+            background: rgba(30,41,59,.95); backdrop-filter: blur(25px);
+            border-radius: 2rem; border: 1px solid var(--glass-border);
+            display: flex; justify-content: space-around; padding: .75rem; z-index: 100;
+            box-shadow: 0 12px 45px rgba(0,0,0,.6);
+        }
+        .light-theme .nav { background: rgba(255,255,255,.95); border-color: rgba(0,0,0,.1); }
+        .nav-item {
+            color: var(--gray-500); text-align: center; font-size: .65rem; font-weight: 600;
+            display: flex; flex-direction: column; align-items: center; gap: .25rem;
+            background: none; border: none; cursor: pointer; padding: .5rem .5rem;
+            border-radius: .75rem; min-width: 55px; transition: all .3s;
+        }
+        .nav-item.active { color: var(--primary); background: rgba(239,68,68,.18); }
+        .nav-icon { font-size: 1.2rem; }
+        .alert-banner {
+            padding: .75rem 1rem; border-radius: 1rem; margin-bottom: 1rem;
+            display: flex; align-items: center; gap: .75rem; font-size: .85rem; font-weight: 600;
+        }
+        .alert-warning { background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.3); color: var(--warning); }
+        .alert-danger { background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); color: var(--primary); }
+        .alert-info { background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.3); color: var(--info); }
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .4rem; color: var(--gray-400); }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: .75rem 1rem; border-radius: .75rem;
+            border: 1px solid rgba(255,255,255,.1);
+            background: rgba(15,23,42,.6); color: var(--gray-900);
+            font-size: .9rem; transition: all .25s;
+        }
+        .light-theme .form-input, .light-theme .form-select, .light-theme .form-textarea {
+            background: rgba(248,250,252,.8); border-color: rgba(0,0,0,.1); color: var(--gray-800);
+        }
+        .file-upload-area {
+            border: 2px dashed rgba(255,255,255,.2); border-radius: 1rem;
+            padding: 1.5rem; text-align: center; cursor: pointer; transition: all .3s;
+            background: rgba(15,23,42,.4); margin-bottom: 1rem;
+        }
+        .light-theme .file-upload-area { border-color: rgba(0,0,0,.2); background: rgba(248,250,252,.6); }
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,.85); backdrop-filter: blur(10px); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--glass); border-radius: 1.5rem; width: 90%; max-width: 500px;
+            max-height: 85vh; overflow-y: auto; border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 60px rgba(0,0,0,.7);
+        }
+        .modal-header { padding: 1.25rem 1.5rem 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 1.5rem; }
+        .modal-footer { padding: 0 1.5rem 1.5rem; display: flex; gap: .75rem; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; color: var(--gray-400); cursor: pointer; }
+        .tabs { display: flex; gap: .5rem; margin-bottom: 1.25rem; overflow-x: auto; }
+        .tab {
+            padding: .6rem 1rem; background: rgba(255,255,255,.05); border-radius: .75rem;
+            border: 1px solid transparent; color: var(--gray-400); font-weight: 600;
+            font-size: .85rem; cursor: pointer; white-space: nowrap;
+        }
+        .tab.active { background: rgba(239,68,68,.15); color: var(--primary); border-color: rgba(239,68,68,.3); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .progress-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; margin-top: .5rem; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width .5s; }
+        .sensor-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+        .sensor-card {
+            background: rgba(255,255,255,.04); border-radius: 1rem; padding: 1rem;
+            text-align: center; border: 1px solid rgba(255,255,255,.05);
+        }
+        .sensor-value { font-size: 1.8rem; font-weight: 900; margin: .25rem 0; }
+        .sensor-label { font-size: .75rem; color: var(--gray-400); }
+        .weather-row { display: flex; gap: .75rem; overflow-x: auto; padding-bottom: .5rem; }
+        .weather-card {
+            min-width: 110px; background: rgba(255,255,255,.04); border-radius: 1rem;
+            padding: .75rem; text-align: center; border: 1px solid rgba(255,255,255,.05);
+        }
+        .weather-icon { font-size: 1.8rem; margin: .25rem 0; }
+        .weather-temp { font-size: 1.2rem; font-weight: 800; }
+        .weather-day { font-size: .7rem; color: var(--gray-400); }
+        .sos-label { margin-top: .75rem; font-size: .85rem; font-weight: 700; color: var(--primary); letter-spacing: 2px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 10px; }
+        :root {
+            --ink: #f8fafc; --muted: #a8b4c7; --panel: rgba(18, 28, 45, .88);
+            --line: rgba(148, 163, 184, .18); --accent: #ff5b4d; --teal: #36d6b4;
+            --sky: #6aaeff; --page-bg: #09111f;
+        }
+        body { font-family: "Trebuchet MS", "Segoe UI", sans-serif; background: var(--page-bg); color: var(--ink); }
+        body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: linear-gradient(125deg, rgba(54,214,180,.07), transparent 35%), radial-gradient(circle at 90% 8%, rgba(106,174,255,.12), transparent 28%); z-index: -1; }
+        .page { animation: pageEnter .35s ease; }
+        .header { background: rgba(9,17,31,.82); border-bottom: 1px solid var(--line); padding: 1rem max(1.25rem, calc((100vw - 1180px) / 2)); }
+        .header h1 { background: none; color: var(--ink); letter-spacing: .01em; }
+        .container { max-width: 1180px; padding: 2rem 1.25rem 8rem; }
+        .page:not(#homePage) .container { max-width: 960px; }
+        .card { background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; box-shadow: 0 18px 50px rgba(0,0,0,.18); }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 22px 55px rgba(0,0,0,.28); }
+        .home-layout { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(320px,.8fr); gap: 1.25rem; align-items: start; }
+        .home-layout > .full-span { grid-column: 1 / -1; }
+        .eyebrow { color: var(--teal); font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+        .hero-title { font-size: clamp(2rem,4vw,3.8rem); line-height: .98; max-width: 680px; margin: .6rem 0 1rem; }
+        .hero-copy { color: var(--muted); max-width: 620px; line-height: 1.6; }
+        .status-strip { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+        .status-chip { display: inline-flex; align-items: center; gap: .45rem; padding: .55rem .75rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .78rem; background: rgba(255,255,255,.03); }
+        .status-dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 .25rem rgba(54,214,180,.12); }
+        .risk-overview { background: linear-gradient(145deg, rgba(255,91,77,.2), rgba(22,34,56,.92)); }
+        .sos-btn-container { margin: 0; min-height: 300px; justify-content: center; background: linear-gradient(145deg, rgba(255,91,77,.09), rgba(255,255,255,.025)); border: 1px solid var(--line); border-radius: 1rem; }
+        .sos-btn { width: 205px; height: 205px; background: radial-gradient(circle at 32% 25%, #ff887b, #e93643 48%, #981d39); }
+        .sos-label { letter-spacing: .18em; }
+        .map-card { padding-bottom: 1rem; }
+        .home-layout > .map-card { grid-column: 1 / -1; }
+        .map-container { height: 390px; border-radius: .8rem; border-color: var(--line); }
+        .map-toolbar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-top: .8rem; }
+        .map-coordinates { flex: 1 1 220px; color: var(--muted); font-size: .76rem; }
+        .map-link { color: var(--sky); text-decoration: none; font-weight: 700; }
+        .map-link:hover { text-decoration: underline; }
+        .google-map-frame { width: 100%; height: 100%; border: 0; display: block; }
+        .guide-list { display: grid; gap: .8rem; counter-reset: guide; }
+        .guide-step { display: grid; grid-template-columns: 2rem 1fr; gap: .7rem; align-items: start; }
+        .guide-step::before { counter-increment: guide; content: counter(guide); display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .55rem; background: rgba(54,214,180,.12); color: var(--teal); font-weight: 900; }
+        .guide-step strong, .guide-step span { display: block; }
+        .guide-step span { color: var(--muted); font-size: .76rem; line-height: 1.45; margin-top: .15rem; }
+        .code-block { margin-top: .8rem; padding: .8rem; overflow-x: auto; border: 1px solid var(--line); border-radius: .65rem; background: rgba(0,0,0,.2); color: #b8f6e7; font: .72rem/1.5 Consolas, monospace; }
+        .connection-row { display: flex; gap: .6rem; align-items: stretch; }
+        .connection-row .form-input { flex: 1; }
+        .connection-status { color: var(--muted); font-size: .75rem; margin-top: .7rem; }
+        .priority-list { display: grid; gap: .65rem; }
+        .priority-row { display: flex; align-items: center; gap: .75rem; padding: .7rem; border-bottom: 1px solid var(--line); }
+        .priority-row:last-child { border-bottom: 0; }
+        .priority-number { width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: .55rem; background: var(--accent-soft, rgba(255,91,77,.14)); color: var(--accent); font-weight: 900; }
+        .priority-copy { flex: 1; min-width: 0; }
+        .priority-copy strong, .priority-copy span { display: block; }
+        .priority-copy span { color: var(--muted); font-size: .74rem; margin-top: .18rem; }
+        .network-offline { color: #fbbf24; }
+        .report-preview { display: none; margin-top: .65rem; padding: .7rem; border: 1px dashed var(--line); border-radius: .7rem; color: var(--muted); font-size: .78rem; }
+        .report-preview.visible { display: block; }
+        .channel-btn.active { color: var(--teal); border-color: rgba(54,214,180,.45); background: rgba(54,214,180,.1); }
+        .api-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+        .api-state { display: flex; align-items: center; gap: .5rem; padding: .7rem; border: 1px solid var(--line); border-radius: .7rem; background: rgba(255,255,255,.025); font-size: .76rem; color: var(--muted); }
+        .api-state i { color: var(--teal); }
+        .api-state.warning i { color: var(--warning); }
+        .risk-meta { color: var(--muted); font-size: .75rem; line-height: 1.45; margin-top: .8rem; }
+        @media (max-width: 600px) { .api-grid { grid-template-columns: 1fr; } }
+        .btn { border-radius: .65rem; box-shadow: none; }
+        .btn-primary { background: var(--accent); }
+        .btn-secondary { background: rgba(255,255,255,.05); border-color: var(--line); }
+        .quick-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: .65rem; }
+        .quick-grid .btn { min-height: 78px; flex-direction: column; padding: .65rem .4rem; color: var(--muted); }
+        .weather-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); overflow: visible; }
+        .weather-card { min-width: 0; }
+        .nav { max-width: 760px; background: rgba(15,27,44,.94); border-color: var(--line); }
+        @media (max-width: 800px) { .home-layout { grid-template-columns: 1fr; } .home-layout > .full-span, .home-layout > .map-card { grid-column: auto; } .quick-grid { grid-template-columns: repeat(3,1fr); } .map-container { height: 300px; } .weather-row { display: flex; overflow-x: auto; } .weather-card { min-width: 110px; } }
+        @media (max-width: 480px) { .container { padding-top: 1.25rem; } .header { padding-left: 1rem; padding-right: 1rem; } .grid-3 { gap: .4rem; } .stat-box { padding: .7rem .35rem; } .stat-icon { font-size: 1.35rem; } .stat-value { font-size: 1.35rem; } .nav { bottom: .6rem; width: calc(100% - 1rem); padding: .5rem .25rem; } .nav-item { min-width: 42px; padding: .35rem .2rem; font-size: .58rem; } }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- HOME PAGE (Combined SafeGuard + NER Disaster) -->
+    <div id="homePage" class="page active">
+        <header class="header">
+            <div style="display:flex;align-items:center;gap:1rem;">
+                <div class="logo-icon">⚠️</div>
+                <div>
+                    <h1 style="font-size:1.1rem;line-height:1;">NER DisasterGuard</h1>
+                    <span style="font-size:.7rem;color:var(--gray-500);">AI Landslide + SafeGuard Health</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:.5rem;">
+                <span id="location-status" aria-label="Location status" style="font-size:1.25rem;color:var(--teal);">○</span>
+                <span id="network-status" class="status-chip" style="padding:.35rem .55rem;" title="Network state"><i class="fas fa-wifi"></i><span>Online</span></span>
+                <button class="icon-btn" onclick="toggleTheme()">🌓</button>
+                <button class="icon-btn" onclick="showPage('alertsPage')">🔔</button>
+            </div>
+        </header>
+        <div class="container">
+            <div class="home-layout">
+            <section class="card full-span" style="background:linear-gradient(120deg,rgba(22,34,56,.96),rgba(12,55,65,.76));">
+                <div class="eyebrow">Regional emergency network</div>
+                <h2 class="hero-title">Stay ahead of the next hazard.</h2>
+                <p class="hero-copy">Live risk signals, trusted alerts, and your exact location in one calm place. Use the emergency control only when you need immediate help.</p>
+                <div class="status-strip"><span class="status-chip"><span class="status-dot"></span><span id="location-status-text">Locating device</span></span><span class="status-chip"><span class="status-dot"></span>Sensor network online</span><span class="status-chip"><i class="fas fa-clock"></i><span id="last-updated">Updated just now</span></span></div>
+            </section>
+
+            <!-- Disaster Overview -->
+            <div class="card risk-overview">
+                <div class="card-title"><span>🌋 Risk Overview</span><span id="overall-risk" class="risk-badge risk-medium">MEDIUM</span></div>
+                <div class="grid-3">
+                    <div class="stat-box"><div class="stat-icon">🏔️</div><div class="stat-value" id="landslide-risk-val">62%</div><div class="stat-label">Landslide</div></div>
+                    <div class="stat-box"><div class="stat-icon">🌊</div><div class="stat-value" id="flood-risk-val">38%</div><div class="stat-label">Flood</div></div>
+                    <div class="stat-box"><div class="stat-icon">🛣️</div><div class="stat-value" id="road-risk-val">45%</div><div class="stat-label">Roads</div></div>
+                </div>
+                <p id="risk-meta" class="risk-meta">Calculating risk from weather and sensor signals...</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span>🎯 Response priority</span><span class="risk-badge risk-high">3 zones</span></div>
+                <div class="priority-list">
+                    <div class="priority-row"><span class="priority-number">1</span><div class="priority-copy"><strong>Mawkdok slope corridor</strong><span>High landslide risk · 2 villages exposed</span></div><span class="risk-badge risk-critical">Act now</span></div>
+                    <div class="priority-row"><span class="priority-number">2</span><div class="priority-copy"><strong>NH-44 connectivity</strong><span>Road blockage reported · emergency route</span></div><span class="risk-badge risk-high">Blocked</span></div>
+                    <div class="priority-row"><span class="priority-number">3</span><div class="priority-copy"><strong>Brahmaputra river watch</strong><span>Rising level · next review in 30 min</span></div><span class="risk-badge risk-medium">Monitor</span></div>
+                </div>
+            </div>
+
+            <div class="sos-btn-container">
+                <button class="sos-btn" onclick="triggerSOS()">SOS</button>
+                <span class="sos-label">EMERGENCY CONTROL</span>
+            </div>
+
+            <!-- Map with weather -->
+            <div class="card map-card">
+                <div class="card-title"><span>🗺️ Live location & risk map</span><button class="btn btn-secondary" style="padding:.3rem .6rem;font-size:.7rem;" onclick="showPage('weatherPage')">Weather</button></div>
+                <div class="map-container"><iframe id="google-map" class="google-map-frame" title="Live device location on Google Maps" src="https://www.google.com/maps?q=26.2,92.3&z=8&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+                <div class="map-toolbar"><span id="address-text" class="map-coordinates">Waiting for device location...</span><button class="btn btn-secondary" onclick="locateMe()"><i class="fas fa-crosshairs"></i> Locate me</button><a id="google-map-link" class="btn btn-primary map-link" href="#" target="_blank" rel="noopener"><i class="fab fa-google"></i> Open in Google Maps</a></div>
+            </div>
+
+            <!-- Quick Access -->
+            <div class="card full-span">
+                <h3 style="margin-bottom:1rem;font-size:1rem;">Quick Access</h3>
+                <div class="quick-grid">
+                    <button class="btn btn-secondary" onclick="showPage('landslidePage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-mountain" style="font-size:1.2rem;"></i><span>Landslide</span></button>
+                    <button class="btn btn-secondary" onclick="showPage('floodPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-water" style="font-size:1.2rem;"></i><span>Flood</span></button>
+                    <button class="btn btn-secondary" onclick="showPage('roadsPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-road" style="font-size:1.2rem;"></i><span>Roads</span></button>
+                    <button class="btn btn-secondary" onclick="showPage('sensorsPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-microchip" style="font-size:1.2rem;"></i><span>IoT</span></button>
+                    <button class="btn btn-secondary" onclick="showPage('reportsPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-camera" style="font-size:1.2rem;"></i><span>Report</span></button>
+                    <button class="btn btn-secondary" onclick="showPage('alertsPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-bell" style="font-size:1.2rem;"></i><span>Alerts</span></button>
+                </div>
+            </div>
+
+            <div class="card full-span">
+                <div class="card-title"><span>📡 Live data services</span><button class="btn btn-secondary" onclick="refreshLiveData()"><i class="fas fa-rotate"></i> Refresh all</button></div>
+                <div class="api-grid"><div id="weather-api-state" class="api-state"><i class="fas fa-cloud-sun"></i><span>Weather API: loading</span></div><div id="location-api-state" class="api-state"><i class="fas fa-location-crosshairs"></i><span>GPS: waiting</span></div><div id="sensor-api-state" class="api-state warning"><i class="fas fa-microchip"></i><span>Sensors: demo mode</span></div></div>
+            </div>
+
+            <!-- Health Quick Links (Original SafeGuard) -->
+            <div class="card full-span">
+                <div class="card-title"><span>🏥 Health & Emergency</span><button class="btn btn-secondary" style="padding:.3rem .6rem;font-size:.7rem;" onclick="showPage('profilePage')">Profile</button></div>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;">
+                    <button class="btn btn-secondary" onclick="showPage('facilitiesPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-hospital" style="font-size:1.2rem;"></i><span>Hospitals</span></button>
+                    <button class="btn btn-secondary" onclick="showPage('emergencyContactsPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-phone" style="font-size:1.2rem;"></i><span>Contacts</span></button>
+                    <button class="btn btn-secondary" onclick="showPage('recordsPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-file-medical" style="font-size:1.2rem;"></i><span>Records</span></button>
+                    <button class="btn btn-secondary" onclick="showPage('appointmentsPage')" style="flex-direction:column;padding:.75rem;"><i class="fas fa-calendar" style="font-size:1.2rem;"></i><span>Appointments</span></button>
+                </div>
+            </div>
+            </div>
+        </div>
+        <nav class="nav">
+            <button class="nav-item active" onclick="showPage('homePage')"><span class="nav-icon">🏠</span>Home</button>
+            <button class="nav-item" onclick="showPage('landslidePage')"><span class="nav-icon">🏔️</span>Risk</button>
+            <button class="nav-item" onclick="showPage('weatherPage')"><span class="nav-icon">⛅</span>Weather</button>
+            <button class="nav-item" onclick="showPage('sensorsPage')"><span class="nav-icon">📡</span>IoT</button>
+            <button class="nav-item" onclick="showPage('recordsPage')"><span class="nav-icon">❤️</span>Health</button>
+            <button class="nav-item" onclick="showPage('profilePage')"><span class="nav-icon">👤</span>Account</button>
+        </nav>
+    </div>
+
+    <!-- LANDSLIDE MONITORING -->
+    <div id="landslidePage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>🏔️ Landslide</h1>
+            <div class="logo-icon">🏔️</div>
+        </header>
+        <div class="container">
+            <div class="card" style="background:linear-gradient(135deg,rgba(239,68,68,.2),var(--glass));">
+                <div class="card-title"><span>IoT Readings</span><span class="risk-badge risk-high" id="ls-risk">HIGH</span></div>
+                <div class="sensor-grid">
+                    <div class="sensor-card"><div class="sensor-icon">🌧️</div><div class="sensor-value" id="sensor-rain">245mm</div><div class="sensor-label">Rainfall</div></div>
+                    <div class="sensor-card"><div class="sensor-icon">💧</div><div class="sensor-value" id="sensor-moisture">78%</div><div class="sensor-label">Soil Moisture</div></div>
+                    <div class="sensor-card"><div class="sensor-icon">📐</div><div class="sensor-value" id="sensor-tilt">32°</div><div class="sensor-label">Tilt</div></div>
+                    <div class="sensor-card"><div class="sensor-icon">🌡️</div><div class="sensor-value" id="sensor-temp">22.4°C</div><div class="sensor-label">Temp</div></div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="ls-progress" style="width:82%;background:var(--primary);"></div></div>
+                <p style="font-size:.8rem;margin-top:.5rem;">AI Risk Score: <b id="ls-score">82%</b></p>
+            </div>
+            <div class="card">
+                <h3>High-Risk Zones</h3>
+                <div id="ls-zones"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WEATHER FORECAST PAGE -->
+    <div id="weatherPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>⛅ Weather</h1>
+            <div class="logo-icon">⛅</div>
+        </header>
+        <div class="container">
+            <div class="card">
+                <div class="card-title"><span>India weather now</span><span class="risk-badge risk-info" style="background:rgba(59,130,246,.15);color:var(--info);">NER</span></div>
+                <div style="text-align:center;"><i id="current-weather-icon" class="fas fa-cloud-showers-heavy" style="font-size:3rem;color:var(--info);"></i><div id="current-temperature" style="font-size:2.5rem;font-weight:900;">--°C</div><div id="current-weather-label">Loading live forecast...</div><p id="weather-updated" style="font-size:.75rem;color:var(--gray-400);margin-top:.5rem;">Connecting to forecast API</p></div>
+                <div class="grid-3" style="margin-top:1.25rem;"><div class="stat-box"><div id="current-rain" class="stat-value">--%</div><div class="stat-label">Rain chance</div></div><div class="stat-box"><div id="current-wind" class="stat-value">--</div><div class="stat-label">Wind km/h</div></div><div class="stat-box"><div id="weather-place" class="stat-value" style="font-size:1rem;">NER</div><div class="stat-label">Forecast area</div></div></div>
+                <button class="btn btn-secondary" onclick="loadIndiaForecast()" style="width:100%;margin-top:1rem;"><i class="fas fa-rotate"></i> Refresh India forecast</button>
+            </div>
+            <div class="card">
+                <div class="card-title"><span>7-day forecast</span><span id="weather-source" style="font-size:.7rem;color:var(--gray-400);">Open-Meteo API</span></div>
+                <div class="weather-row" id="forecast-list"></div>
+            </div>
+            <div class="card">
+                <h3>Weather Map</h3>
+                <div class="map-container"><iframe id="google-weather-map" class="google-map-frame" title="Weather region on Google Maps" src="https://www.google.com/maps?q=26.2,92.3&z=8&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- IoT SENSORS PAGE -->
+    <div id="sensorsPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>📡 IoT Sensors</h1>
+            <div class="logo-icon">📡</div>
+        </header>
+        <div class="container">
+            <div class="card">
+                <div class="card-title"><span>ESP32 Network</span><span class="risk-badge risk-low" id="sensor-status">ONLINE</span></div>
+                <div class="sensor-grid">
+                    <div class="sensor-card"><div class="sensor-icon">🌧️</div><div class="sensor-value" id="iot-rain">245mm</div><div class="sensor-label">FC-37 Rain</div></div>
+                    <div class="sensor-card"><div class="sensor-icon">💧</div><div class="sensor-value" id="iot-moist">78%</div><div class="sensor-label">Soil Moisture</div></div>
+                    <div class="sensor-card"><div class="sensor-icon">📐</div><div class="sensor-value" id="iot-tilt">32°</div><div class="sensor-label">MPU6050</div></div>
+                    <div class="sensor-card"><div class="sensor-icon">🌡️</div><div class="sensor-value" id="iot-dht">22°C</div><div class="sensor-label">DHT22</div></div>
+                </div>
+                <button class="btn btn-primary" style="width:100%;margin-top:1rem;" onclick="refreshSensorData()"><i class="fas fa-sync"></i> Refresh Data</button>
+            </div>
+            <div class="card">
+                <div class="card-title"><span>🔌 Connect ESP32 readings</span><span class="risk-badge risk-low">HTTP JSON</span></div>
+                <p style="color:var(--muted);font-size:.8rem;line-height:1.5;margin-bottom:1rem;">Connect an ESP32 over Wi-Fi and point this dashboard to its sensor endpoint. The device should return rainfall, soil moisture, tilt, and temperature readings.</p>
+                <div class="connection-row"><input class="form-input" id="esp32-url" value="http://192.168.4.1/sensors" aria-label="ESP32 sensor endpoint"><button class="btn btn-primary" onclick="connectEsp32()"><i class="fas fa-link"></i> Connect</button></div>
+                <p id="esp32-status" class="connection-status">Demo values are active. Connect a device to replace them with live readings.</p>
+                <div class="guide-list" style="margin-top:1.2rem;">
+                    <div class="guide-step"><div><strong>Wire the sensors</strong><span>Connect FC-37 to an analog pin, capacitive soil sensor to an analog pin, MPU6050 over I2C, and DHT22 to a digital pin.</span></div></div>
+                    <div class="guide-step"><div><strong>Join the network</strong><span>Put the ESP32 and this dashboard on the same Wi-Fi network. Find the board IP from the serial monitor or router.</span></div></div>
+                    <div class="guide-step"><div><strong>Expose a JSON endpoint</strong><span>Serve <b>/sensors</b> from the ESP32 and allow browser requests with CORS.</span><pre class="code-block">{"rainfall":245,"soilMoisture":78,"tilt":32,"temperature":22.4}</pre></div></div>
+                    <div class="guide-step"><div><strong>Connect and verify</strong><span>Enter the endpoint above, select Connect, and confirm the four sensor tiles update with a live timestamp.</span></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOOD MONITORING -->
+    <div id="floodPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>🌊 Flood</h1>
+            <div class="logo-icon">🌊</div>
+        </header>
+        <div class="container">
+            <div class="card">
+                <div class="card-title"><span>River Levels</span><span class="risk-badge risk-medium">MEDIUM</span></div>
+                <div id="river-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROAD STATUS PAGE -->
+    <div id="roadsPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>🛣️ Roads</h1>
+            <div class="logo-icon">🛣️</div>
+        </header>
+        <div class="container">
+            <div class="card">
+                <div class="card-title"><span>Road Status</span><span class="risk-badge risk-high">4 Blocked</span></div>
+                <div id="road-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CITIZEN REPORT -->
+    <div id="reportsPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>📸 Report</h1>
+            <div class="logo-icon">📸</div>
+        </header>
+        <div class="container">
+            <div class="card">
+                <div class="card-title"><span>Report field evidence</span><span class="risk-badge risk-low">Geo-tagged</span></div>
+                <p style="color:var(--muted);font-size:.8rem;line-height:1.5;margin-bottom:1rem;">Help district teams verify cracks, slope movement, flooding, and blocked roads. Reports are queued locally when the network is unavailable.</p>
+                <div class="form-group"><label>Location</label><input type="text" class="form-input" id="report-location" placeholder="GPS location will appear here" readonly></div>
+                <div class="form-group"><label>Type</label><select class="form-select" id="report-type"><option>Landslide</option><option>Flood</option><option>Road Block</option><option>Crack</option></select></div>
+                <div class="form-group"><label>Severity</label><select class="form-select" id="report-severity"><option>High</option><option>Medium</option><option>Low</option></select></div>
+                <div class="form-group"><label>Description</label><textarea class="form-textarea" id="report-desc" placeholder="What did you observe?"></textarea></div>
+                <div class="form-group"><label>Photo or video evidence</label><input class="form-input" type="file" id="report-evidence" accept="image/*,video/*" capture="environment"><div id="report-preview" class="report-preview"></div></div>
+                <button class="btn btn-primary" onclick="submitReport()" style="width:100%;"><i class="fas fa-paper-plane"></i> Submit geo-tagged report</button>
+                <div id="report-queue" style="color:var(--muted);font-size:.75rem;margin-top:.75rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERTS PAGE -->
+    <div id="alertsPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>🔔 Alerts</h1>
+            <div class="logo-icon">🔔</div>
+        </header>
+        <div class="container">
+            <div class="card">
+                <h3>Alert Settings</h3>
+                <label class="form-label" for="alert-lang">Notification language</label><select class="form-select" id="alert-lang" onchange="setAlertLanguage(this.value)"><option>English</option><option>Assamese</option><option>Hindi</option></select>
+                <div style="display:flex;gap:.5rem;margin-top:.75rem;">
+                    <button id="alert-sms" class="btn btn-secondary channel-btn" onclick="toggleAlert('sms')"><i class="fas fa-comment-sms"></i> SMS</button>
+                    <button id="alert-app" class="btn btn-secondary channel-btn" onclick="toggleAlert('app')"><i class="fas fa-mobile-screen"></i> App</button>
+                    <button id="alert-email" class="btn btn-secondary channel-btn" onclick="toggleAlert('email')"><i class="fas fa-envelope"></i> Email</button>
+                </div>
+                <p id="alert-language-status" style="color:var(--muted);font-size:.75rem;margin-top:.75rem;">Alerts are ready for district and community delivery.</p>
+            </div>
+            <div class="card"><h3>History</h3><div id="alert-history"></div></div>
+        </div>
+    </div>
+
+    <!-- PROFILE PAGE (SafeGuard) -->
+    <div id="profilePage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>👤 Profile</h1>
+            <div class="logo-icon">👤</div>
+        </header>
+        <div class="container">
+            <div class="card">
+                <h3>Personal Info</h3>
+                <div class="form-group"><label>Name</label><input type="text" class="form-input" id="prof-name" value="John Doe"></div>
+                <div class="form-group"><label>Blood</label><input type="text" class="form-input" id="prof-blood" value="O+"></div>
+                <button class="btn btn-primary" onclick="saveProfile()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEALTH RECORDS (SafeGuard) -->
+    <div id="recordsPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>❤️ Records</h1>
+            <div class="logo-icon">❤️</div>
+        </header>
+        <div class="container">
+            <div class="card"><h3>Lab Results</h3><div id="lab-results"></div></div>
+        </div>
+    </div>
+
+    <!-- APPOINTMENTS (SafeGuard) -->
+    <div id="appointmentsPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>📅 Visits</h1>
+            <div class="logo-icon">📅</div>
+        </header>
+        <div class="container">
+            <div class="card"><h3>Upcoming</h3><div id="appt-list"></div></div>
+        </div>
+    </div>
+
+    <!-- FACILITIES (SafeGuard) -->
+    <div id="facilitiesPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>🏥 Hospitals</h1>
+            <div class="logo-icon">🏥</div>
+        </header>
+        <div class="container">
+            <div id="facility-list"></div>
+        </div>
+    </div>
+
+    <!-- EMERGENCY CONTACTS (SafeGuard) -->
+    <div id="emergencyContactsPage" class="page">
+        <header class="header">
+            <button class="back-btn" onclick="showPage('homePage')"><i class="fas fa-arrow-left"></i></button>
+            <h1>📞 Contacts</h1>
+            <div class="logo-icon">📞</div>
+        </header>
+        <div class="container">
+            <div id="contact-list"></div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="reportSuccessModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>✅ Submitted</h2><button class="close-modal" onclick="closeModal('reportSuccessModal')"><i class="fas fa-times"></i></button></div>
+            <div class="modal-body"><p>Report submitted to authorities!</p></div>
+            <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('reportSuccessModal')">OK</button></div>
+        </div>
+    </div>
+
+    <script>
+        // Global
+        let locationWatchId;
+        let currentLocation = null;
+        let fieldReports = JSON.parse(localStorage.getItem('ndg_field_reports') || '[]');
+        let alertPreferences = JSON.parse(localStorage.getItem('ndg_alert_preferences') || '{"sms":true,"app":true,"email":false,"language":"English"}');
+        let weatherRequestInFlight = false;
+        let weatherLoadedFor = null;
+        let latestWeatherSignals = { rainChance: 38, precipitation: 0 };
+        let latestSensorSignals = { rainfall: 245, soilMoisture: 78, tilt: 32 };
+        let lastReverseGeocodeKey = null;
+        let sensorSource = 'demo';
+
+        function init() {
+            initGoogleMaps();
+            loadData();
+            loadIndiaForecast();
+            startSensorSimulation();
+            startLocationTracking();
+            updateNetworkStatus();
+            renderReportQueue();
+            document.getElementById('alert-lang').value = alertPreferences.language;
+            updateAlertChannels();
+            document.getElementById('report-evidence').addEventListener('change', previewEvidence);
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
+        }
+
+        function initGoogleMaps() {
+            updateGoogleMapFrames(26.2, 92.3, 8);
+        }
+
+        function updateGoogleMapFrames(latitude, longitude, zoom = 15) {
+            const mapUrl = `https://www.google.com/maps?q=${latitude},${longitude}&z=${zoom}&output=embed`;
+            document.getElementById('google-map').src = mapUrl;
+            document.getElementById('google-weather-map').src = mapUrl;
+        }
+
+        function startSensorSimulation() {
+            setInterval(() => {
+                const rain = (200 + Math.random()*80).toFixed(0);
+                const moisture = (70 + Math.random()*15).toFixed(0);
+                const tilt = (25 + Math.random()*10).toFixed(1);
+                const temp = (20 + Math.random()*5).toFixed(1);
+                updateSensorDisplays({ rainfall: rain, soilMoisture: moisture, tilt, temperature: temp });
+            }, 4000);
+        }
+
+        function updateSensorDisplays(readings) {
+            latestSensorSignals = { rainfall: Number(readings.rainfall), soilMoisture: Number(readings.soilMoisture), tilt: Number(readings.tilt) };
+            document.getElementById('sensor-rain').textContent = readings.rainfall + 'mm';
+            document.getElementById('sensor-moisture').textContent = readings.soilMoisture + '%';
+            document.getElementById('sensor-tilt').textContent = readings.tilt + '°';
+            document.getElementById('sensor-temp').textContent = readings.temperature + '°C';
+            document.getElementById('iot-rain').textContent = readings.rainfall + 'mm';
+            document.getElementById('iot-moist').textContent = readings.soilMoisture + '%';
+            document.getElementById('iot-tilt').textContent = readings.tilt + '°';
+            document.getElementById('iot-dht').textContent = readings.temperature + '°C';
+            document.getElementById('sensor-api-state').className = `api-state${sensorSource === 'demo' ? ' warning' : ''}`;
+            document.getElementById('sensor-api-state').innerHTML = `<i class="fas fa-microchip"></i><span>Sensors: ${sensorSource === 'demo' ? 'demo values' : 'ESP32 connected'}</span>`;
+            updateRiskSignals();
+        }
+
+        function isIndianCoordinate(latitude, longitude) {
+            return latitude >= 6 && latitude <= 37.5 && longitude >= 68 && longitude <= 97.5;
+        }
+
+        async function loadIndiaForecast() {
+            if (weatherRequestInFlight) return;
+            const coordinates = currentLocation && isIndianCoordinate(currentLocation.lat, currentLocation.lng)
+                ? currentLocation
+                : { lat: 26.2, lng: 92.3 };
+            const locationKey = `${coordinates.lat.toFixed(2)},${coordinates.lng.toFixed(2)}`;
+            weatherRequestInFlight = true;
+            document.getElementById('weather-updated').textContent = 'Fetching live data from India forecast API...';
+            const endpoint = `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.lat}&longitude=${coordinates.lng}&current=temperature_2m,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FKolkata&forecast_days=7`;
+            try {
+                const response = await fetch(endpoint, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                renderIndiaForecast(data, coordinates);
+                weatherLoadedFor = locationKey;
+                document.getElementById('weather-api-state').className = 'api-state';
+                document.getElementById('weather-api-state').innerHTML = '<i class="fas fa-cloud-sun"></i><span>Weather API: connected</span>';
+            } catch (error) {
+                document.getElementById('weather-api-state').className = 'api-state warning';
+                document.getElementById('weather-api-state').innerHTML = '<i class="fas fa-cloud-sun"></i><span>Weather API: unavailable</span>';
+                document.getElementById('weather-updated').textContent = `Forecast unavailable: ${error.message}. Showing last available view.`;
+            } finally {
+                weatherRequestInFlight = false;
+            }
+        }
+
+        function weatherDescription(code) {
+            if (code === 0) return ['Clear sky', 'fa-sun'];
+            if ([1, 2, 3].includes(code)) return ['Partly cloudy', 'fa-cloud-sun'];
+            if ([45, 48].includes(code)) return ['Foggy', 'fa-smog'];
+            if ([51, 53, 55, 56, 57].includes(code)) return ['Drizzle', 'fa-cloud-rain'];
+            if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return ['Rain showers', 'fa-cloud-showers-heavy'];
+            if ([71, 73, 75, 77, 85, 86].includes(code)) return ['Snow', 'fa-snowflake'];
+            if ([95, 96, 99].includes(code)) return ['Thunderstorm', 'fa-cloud-bolt'];
+            return ['Mixed conditions', 'fa-cloud'];
+        }
+
+        function renderIndiaForecast(data, coordinates) {
+            const current = data.current;
+            const daily = data.daily;
+            const currentWeather = weatherDescription(current.weather_code);
+            document.getElementById('current-temperature').textContent = `${Math.round(current.temperature_2m)}°C`;
+            document.getElementById('current-weather-label').textContent = currentWeather[0];
+            document.getElementById('current-weather-icon').className = `fas ${currentWeather[1]}`;
+            document.getElementById('current-rain').textContent = `${daily.precipitation_probability_max[0]}%`;
+            document.getElementById('current-wind').textContent = `${Math.round(current.wind_speed_10m)}`;
+            document.getElementById('weather-place').textContent = isIndianCoordinate(coordinates.lat, coordinates.lng) ? 'India' : 'NER';
+            document.getElementById('weather-updated').textContent = `Live data · ${current.time.replace('T', ' ')} IST`;
+            latestWeatherSignals = { rainChance: Number(daily.precipitation_probability_max[0]), precipitation: Number(current.precipitation || 0) };
+            updateRiskSignals();
+            document.getElementById('forecast-list').innerHTML = daily.time.map((date, index) => {
+                const day = new Date(`${date}T12:00:00`).toLocaleDateString('en-IN', { weekday: 'short' });
+                const weather = weatherDescription(daily.weather_code[index]);
+                return `<div class="weather-card"><div class="weather-day">${index === 0 ? 'Today' : day}</div><div class="weather-icon"><i class="fas ${weather[1]}" style="color:var(--info);"></i></div><div class="weather-temp">${Math.round(daily.temperature_2m_max[index])}°</div><div style="font-size:.68rem;color:var(--gray-400);">${Math.round(daily.temperature_2m_min[index])}° / ${daily.precipitation_probability_max[index]}% rain</div></div>`;
+            }).join('');
+        }
+
+        function updateRiskSignals() {
+            const landslide = Math.min(98, Math.round(latestWeatherSignals.rainChance * .42 + latestSensorSignals.soilMoisture * .28 + latestSensorSignals.tilt * .85));
+            const flood = Math.min(95, Math.round(latestWeatherSignals.rainChance * .72 + latestWeatherSignals.precipitation * 3));
+            const roads = Math.min(92, Math.round(landslide * .55 + flood * .25));
+            const overall = Math.max(landslide, flood, roads);
+            const level = overall >= 75 ? 'HIGH' : overall >= 50 ? 'MEDIUM' : 'LOW';
+            const badge = document.getElementById('overall-risk');
+            badge.textContent = level;
+            badge.className = `risk-badge risk-${level.toLowerCase()}`;
+            document.getElementById('landslide-risk-val').textContent = `${landslide}%`;
+            document.getElementById('flood-risk-val').textContent = `${flood}%`;
+            document.getElementById('road-risk-val').textContent = `${roads}%`;
+            document.getElementById('risk-meta').textContent = `Demo risk score uses rainfall chance, precipitation, soil moisture, and slope tilt. Calculated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+        }
+
+        function refreshLiveData() {
+            loadIndiaForecast();
+            startLocationTracking();
+            refreshSensorData();
+        }
+
+        async function reverseGeocode(latitude, longitude) {
+            const key = `${latitude.toFixed(3)},${longitude.toFixed(3)}`;
+            if (key === lastReverseGeocodeKey) return;
+            lastReverseGeocodeKey = key;
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=12`, { headers: { Accept: 'application/json' } });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const address = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                document.getElementById('address-text').textContent = address;
+                document.getElementById('location-api-state').className = 'api-state';
+                document.getElementById('location-api-state').innerHTML = '<i class="fas fa-location-crosshairs"></i><span>GPS: live + named location</span>';
+            } catch (error) {
+                document.getElementById('address-text').textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (location name unavailable)`;
+            }
+        }
+
+        function loadData() {
+            // Landslide zones
+            document.getElementById('ls-zones').innerHTML = `
+                <div class="list-item"><div class="item-icon">🏔️</div><div style="flex:1;"><h4>Mawkdok</h4><p style="font-size:.75rem;color:var(--gray-400);">Moisture 82% | Rain 245mm</p></div><span class="risk-badge risk-high">HIGH</span></div>
+                <div class="list-item"><div class="item-icon">🏔️</div><div style="flex:1;"><h4>Tawang</h4><p style="font-size:.75rem;color:var(--gray-400);">Moisture 75% | Rain 210mm</p></div><span class="risk-badge risk-high">HIGH</span></div>
+            `;
+            // Rivers
+            document.getElementById('river-list').innerHTML = `
+                <div class="list-item"><div class="item-icon">🌊</div><div style="flex:1;"><h4>Brahmaputra</h4><p style="font-size:.75rem;color:var(--gray-400);">Level: 19.2m | Rising</p></div><span class="risk-badge risk-high">DANGER</span></div>
+            `;
+            // Roads
+            document.getElementById('road-list').innerHTML = `
+                <div class="list-item"><div class="item-icon">🛣️</div><div style="flex:1;"><h4>NH-44</h4><p style="font-size:.75rem;color:var(--gray-400);">Landslide blocked</p></div><span class="risk-badge risk-high">BLOCKED</span></div>
+                <div class="list-item"><div class="item-icon">🛣️</div><div style="flex:1;"><h4>NH-13</h4><p style="font-size:.75rem;color:var(--gray-400);">Slope failure</p></div><span class="risk-badge risk-high">BLOCKED</span></div>
+            `;
+            // Forecast
+            document.getElementById('forecast-list').innerHTML = `
+                ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i) => `<div class="weather-card"><div class="weather-day">${d}</div><div class="weather-icon">🌧️</div><div class="weather-temp">${20+i%3}°</div></div>`).join('')}
+            `;
+            // Health data
+            document.getElementById('lab-results').innerHTML = `<div class="list-item"><div class="item-icon">🧪</div><div><h4>Blood Test</h4><p>Normal</p></div></div>`;
+            document.getElementById('appt-list').innerHTML = `<div class="list-item"><div class="item-icon">📅</div><div><h4>Dr. Sharma</h4><p>2026-09-10</p></div></div>`;
+            document.getElementById('facility-list').innerHTML = `<div class="list-item"><div class="item-icon">🏥</div><div><h4>Guwahati Medical</h4><p>3km</p></div></div>`;
+            document.getElementById('contact-list').innerHTML = `<div class="list-item"><div class="item-icon">👮</div><div><h4>Police</h4><p>100</p></div></div>`;
+            document.getElementById('alert-history').innerHTML = `<div class="list-item"><div class="item-icon">🔔</div><div><p>Landslide warning Mawkdok</p></div></div>`;
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function startLocationTracking() {
+            const status = document.getElementById('location-status-text');
+            const address = document.getElementById('address-text');
+            if (!navigator.geolocation) {
+                status.textContent = 'GPS unavailable';
+                address.textContent = 'This device does not provide location services.';
+                return;
+            }
+
+            status.textContent = 'Requesting live GPS';
+            address.textContent = 'Waiting for device location permission...';
+            locationWatchId = navigator.geolocation.watchPosition(updateDeviceLocation, handleLocationError, {
+                enableHighAccuracy: true,
+                maximumAge: 5000,
+                timeout: 15000
+            });
+        }
+
+        function updateDeviceLocation(position) {
+            const { latitude, longitude, accuracy } = position.coords;
+            currentLocation = { lat: latitude, lng: longitude, accuracy };
+            const point = [latitude, longitude];
+            updateGoogleMapFrames(latitude, longitude, 16);
+
+            const coordinates = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)} m)`;
+            document.getElementById('address-text').textContent = coordinates;
+            document.getElementById('location-status-text').textContent = 'Live GPS connected';
+            document.getElementById('location-api-state').className = 'api-state';
+            document.getElementById('location-api-state').innerHTML = '<i class="fas fa-location-crosshairs"></i><span>GPS: live position</span>';
+            document.getElementById('location-status').textContent = '●';
+            document.getElementById('location-status').style.color = '#36d6b4';
+            document.getElementById('report-location').value = `https://maps.google.com/?q=${latitude},${longitude}`;
+            document.getElementById('google-map-link').href = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+            document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            reverseGeocode(latitude, longitude);
+            const weatherLocationKey = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
+            if (isIndianCoordinate(latitude, longitude) && weatherLoadedFor !== weatherLocationKey) loadIndiaForecast();
+        }
+
+        function handleLocationError(error) {
+            const status = document.getElementById('location-status-text');
+            const address = document.getElementById('address-text');
+            status.textContent = error.code === 1 ? 'GPS permission needed' : 'GPS signal unavailable';
+            address.textContent = error.code === 1 ? 'Allow location access to show your live position.' : 'Move somewhere with a clearer GPS signal and try again.';
+            document.getElementById('location-api-state').className = 'api-state warning';
+            document.getElementById('location-api-state').innerHTML = '<i class="fas fa-location-crosshairs"></i><span>GPS: unavailable</span>';
+            document.getElementById('location-status').textContent = '○';
+            document.getElementById('location-status').style.color = '#f59e0b';
+        }
+
+        function locateMe() {
+            if (currentLocation) {
+                updateGoogleMapFrames(currentLocation.lat, currentLocation.lng, 17);
+                return;
+            }
+            startLocationTracking();
+        }
+
+        function triggerSOS() {
+            if (confirm('Send emergency SOS?')) {
+                alert('SOS sent to authorities & contacts!');
+            }
+        }
+
+        function submitReport() {
+            const description = document.getElementById('report-desc').value.trim();
+            const evidence = document.getElementById('report-evidence').files[0];
+            if (!currentLocation) {
+                alert('Wait for live GPS before submitting a geo-tagged report.');
+                return;
+            }
+            if (!description) {
+                alert('Add a short description so the response team can prioritise this report.');
+                return;
+            }
+            const report = {
+                id: Date.now(), type: document.getElementById('report-type').value,
+                severity: document.getElementById('report-severity').value,
+                description, evidence: evidence ? evidence.name : 'No attachment',
+                location: { lat: currentLocation.lat, lng: currentLocation.lng },
+                status: navigator.onLine ? 'Sent to response queue' : 'Waiting for network sync',
+                createdAt: new Date().toISOString()
+            };
+            fieldReports.unshift(report);
+            localStorage.setItem('ndg_field_reports', JSON.stringify(fieldReports));
+            renderReportQueue();
+            document.getElementById('report-desc').value = '';
+            document.getElementById('report-evidence').value = '';
+            document.getElementById('report-preview').classList.remove('visible');
+            document.querySelector('#reportSuccessModal .modal-body p').textContent = report.status + '. Location and evidence metadata saved.';
+            openModal('reportSuccessModal');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function toggleTheme() { document.body.classList.toggle('light-theme'); }
+        function updateNetworkStatus() {
+            const network = document.getElementById('network-status');
+            if (!network) return;
+            network.classList.toggle('network-offline', !navigator.onLine);
+            network.innerHTML = `<i class="fas fa-${navigator.onLine ? 'wifi' : 'cloud-arrow-down'}"></i><span>${navigator.onLine ? 'Online' : 'Offline queue'}</span>`;
+            renderReportQueue();
+        }
+
+        function renderReportQueue() {
+            const queue = document.getElementById('report-queue');
+            if (!queue) return;
+            const pending = fieldReports.filter(report => report.status === 'Waiting for network sync').length;
+            queue.textContent = pending ? `${pending} report${pending === 1 ? '' : 's'} waiting to sync when online.` : `${fieldReports.length} report${fieldReports.length === 1 ? '' : 's'} saved in this device.`;
+        }
+
+        function previewEvidence(event) {
+            const preview = document.getElementById('report-preview');
+            const file = event.target.files[0];
+            if (!file) { preview.classList.remove('visible'); return; }
+            preview.textContent = `${file.name} selected (${Math.ceil(file.size / 1024)} KB)`;
+            preview.classList.add('visible');
+        }
+
+        function updateAlertChannels() {
+            ['sms', 'app', 'email'].forEach(channel => document.getElementById(`alert-${channel}`).classList.toggle('active', alertPreferences[channel]));
+        }
+
+        function toggleAlert(type) {
+            alertPreferences[type] = !alertPreferences[type];
+            localStorage.setItem('ndg_alert_preferences', JSON.stringify(alertPreferences));
+            updateAlertChannels();
+            document.getElementById('alert-language-status').textContent = `${type.toUpperCase()} alerts ${alertPreferences[type] ? 'enabled' : 'paused'} for the response network.`;
+        }
+
+        function setAlertLanguage(language) {
+            alertPreferences.language = language;
+            localStorage.setItem('ndg_alert_preferences', JSON.stringify(alertPreferences));
+            const messages = { English: 'Alerts are ready for district and community delivery.', Assamese: 'Alerts will be prepared in Assamese for community delivery.', Hindi: 'Alerts will be prepared in Hindi for community delivery.' };
+            document.getElementById('alert-language-status').textContent = messages[language];
+        }
+        function refreshSensorData() { updateSensorDisplays({ rainfall: (200 + Math.random() * 80).toFixed(0), soilMoisture: (70 + Math.random() * 15).toFixed(0), tilt: (25 + Math.random() * 10).toFixed(1), temperature: (20 + Math.random() * 5).toFixed(1) }); }
+
+        async function connectEsp32() {
+            const endpoint = document.getElementById('esp32-url').value.trim();
+            const status = document.getElementById('esp32-status');
+            if (!endpoint) { status.textContent = 'Enter the ESP32 /sensors endpoint first.'; return; }
+            status.textContent = 'Connecting to ESP32...';
+            try {
+                const response = await fetch(endpoint, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const readings = await response.json();
+                ['rainfall', 'soilMoisture', 'tilt', 'temperature'].forEach(key => { if (readings[key] === undefined) throw new Error(`Missing ${key}`); });
+                updateSensorDisplays(readings);
+                sensorSource = 'esp32';
+                document.getElementById('sensor-api-state').className = 'api-state';
+                document.getElementById('sensor-api-state').innerHTML = '<i class="fas fa-microchip"></i><span>Sensors: ESP32 connected</span>';
+                document.getElementById('sensor-status').textContent = 'LIVE';
+                status.textContent = `Live ESP32 readings received at ${new Date().toLocaleTimeString()}.`;
+            } catch (error) {
+                document.getElementById('sensor-status').textContent = 'DEMO';
+                status.textContent = `Connection failed: ${error.message}. Check the IP, Wi-Fi, endpoint, and CORS settings.`;
+            }
+        }
+        function saveProfile() { alert('Profile saved'); }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
